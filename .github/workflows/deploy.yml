@@ -1,0 +1,28 @@
+name: Deploy FastAPI to AWS EC2
+
+on:
+  push:
+    branches:
+      - main  # Deploy on push to main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ubuntu
+          key: ${{ secrets.AWS_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/ai-interview-app
+            git pull origin main
+            docker stop ai-interview || true
+            docker rm ai-interview || true
+            docker build -t ai-interview .
+            docker run -d -p 8000:8000 --name ai-interview ai-interview
